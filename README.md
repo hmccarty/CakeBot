@@ -1,2 +1,4 @@
-# CakeBot
-This is project will serve as a mobile test-bench for new sensors.
+# Cake Bot
+
+# Todo
+- Write README.md
