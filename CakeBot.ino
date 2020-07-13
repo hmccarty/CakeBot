@@ -6,7 +6,7 @@
 
 MPU6050 imu;
 
-int16_t ax, gy, az;
+int16_t ax, ay, az;
 int16_t gx, gy, gz;
 
 void setup() {
