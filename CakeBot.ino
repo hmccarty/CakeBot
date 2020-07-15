@@ -1,14 +1,12 @@
 #include "Wire.h"
 #include "Motor.h"
 
-#define PRId16 "hd"
-
 Motor leftMotor(2, 3);
 
 void setup() {
   Serial.begin(38400);
 
-  leftMotor.setup();
+  leftMotor.attach();
 }
 
 void loop() {
