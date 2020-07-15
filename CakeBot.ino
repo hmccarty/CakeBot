@@ -1,11 +1,26 @@
 #include "Wire.h"
+#include "Motor.h"
 
 #define PRId16 "hd"
 
+Motor leftMotor(2, 3);
+
+void setup() {
+  Serial.begin(38400);
+
+  leftMotor.setup();
+}
+
+void loop() {
+  Serial.println(leftMotor.getDt(), BIN);
+}
+/*
 MPU6050 imu;
 
 float prev_time, curr_time;
 
+int16_t ax, ay, az;
+int16_t gx, gy, gz;
 
 void setup() {
     Wire.begin();
@@ -31,10 +46,9 @@ void setup() {
            
         Gyr_rawX=Wire.read()<<8|Wire.read();     //Once again we shif and sum
         Gyr_rawY=Wire.read()<<8|Wire.read();
-     
-        /*---X---*/
+
         Gyro_raw_error_x = Gyro_raw_error_x + (Gyr_rawX/32.8); 
-        /*---Y---*/
+
         Gyro_raw_error_y = Gyro_raw_error_y + (Gyr_rawY/32.8);
         if(i==199)
         {
@@ -56,4 +70,4 @@ void loop() {
     Serial.print("Gyro readings: ");
     Serial.print(angle_x);
     Serial.print("\n");
-}
+}*/
