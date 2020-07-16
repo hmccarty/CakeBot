@@ -1,7 +1,7 @@
 #include "Wire.h"
 #include "Motor.h"
 
-Motor leftMotor(2, 3);
+Motor leftMotor(5, 6, 2, 3);
 
 void setup() {
   Serial.begin(38400);
@@ -10,7 +10,9 @@ void setup() {
 }
 
 void loop() {
-  Serial.println(leftMotor.getDt(), BIN);
+  //Serial.println(leftMotor.getDt(), BIN);
+  leftMotor.setPosition(2000);
+  Serial.println(leftMotor.getVelocity());
 }
 /*
 MPU6050 imu;

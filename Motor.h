@@ -5,29 +5,36 @@ constexpr unsigned N_MOTORS = 1;
 
 class Motor {
     public:
-        Motor(uint8_t clk,  uint8_t dt);
+        Motor(byte forward, byte reverse,
+              byte clk,  byte dt);
         void attach();
         void reset();
-        void update();
-        int32_t getVelocity();
-        int32_t getPosition();
-        uint8_t getDt();
+        void updateEncoder();
+        double getVelocity();
+        int getPosition();
+        void setPosition(int position);
+        void setDutyCycle(double dutyCycle);
 
-        template <unsigned PIN> 
+        template <unsigned MOTOR_IDX> 
         static void handler();
 
     private:
-        uint8_t clk;
-        uint8_t clk_mask;
-        volatile uint8_t *clk_port;
+        byte forward;
+        byte reverse;
+    
+        byte clk;
+        byte clk_mask;
+        volatile byte *clk_port;
 
-        uint8_t dt;
-        uint8_t dt_mask;
-        volatile uint8_t *dt_port;
+        byte dt;
+        byte dt_mask;
+        volatile byte *dt_port;
 
-        uint8_t prev_enc;
-        int32_t position;
-        int32_t velocity;
+        byte prev_enc;
+        int prev_position;
+        unsigned long prev_time;
+        int position;
+        double velocity;
 
         static Motor *self[N_MOTORS];
         static void (*const HANDLERS[N_MOTORS])();
