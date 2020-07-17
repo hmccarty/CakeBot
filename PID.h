@@ -47,8 +47,8 @@ class PID {
         double max_output;
         double min_output;
 
-        double prev_error;
-        double error_sum;
+        double prev_actual;
+        double i_sum;
 
         unsigned long sample_time;
         unsigned long prev_time;

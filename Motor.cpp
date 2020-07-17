@@ -21,6 +21,7 @@ Motor::Motor(byte forward, byte reverse, byte clk, byte dt,
     dt_mask = digitalPinToBitMask(dt);
     dt_port = portInputRegister(digitalPinToPort(dt));
 
+    output = 0;
     this->max_output = max_output;
     this->min_output = min_output;
 
@@ -46,8 +47,11 @@ void Motor::setup() {
     pinMode(forward, OUTPUT);
     pinMode(reverse, OUTPUT);
 
-    attachInterrupt(digitalPinToInterrupt(clk), HANDLERS[0], CHANGE);
-    attachInterrupt(digitalPinToInterrupt(dt), HANDLERS[0], CHANGE);
+    pid.SetMode(AUTOMATIC);
+    pid.SetOutputLimits(max_output, min_output);
+
+    //attachInterrupt(digitalPinToInterrupt(clk), HANDLERS[0], CHANGE);
+    //attachInterrupt(digitalPinToInterrupt(dt), HANDLERS[0], CHANGE);
 }
 
 void Motor::update_encoder() {
@@ -65,16 +69,23 @@ void Motor::reset_encoder() {
 void Motor::execute() {
   unsigned long curr_time = millis();
   unsigned long time_change = (curr_time - prev_time);
+  curr_position = (double) enc.read();
 
-  if (time_change >= sample_time) {
-    curr_velocity = (curr_position - prev_position) / time_change;
+  if (time_change >= 100) {
+    curr_velocity = ((curr_position - prev_position) / (double) time_change);
 
-    double output = (*pid).calculate(curr_time);
-    set_duty_cycle(output);
+    //double output = (*pid).calculate(curr_time)
 
     prev_position = curr_position;
     prev_time = curr_time;
   }
+
+  //pid.Compute();
+//  Serial.print("Output: ");
+//  Serial.print(output);
+//  Serial.println();
+  //set_duty_cycle(255);
+  set_duty_cycle(120);
 }
 
 void Motor::set_duty_cycle(double dutyCycle) {
@@ -87,12 +98,20 @@ void Motor::set_duty_cycle(double dutyCycle) {
   }
 }
 
-int Motor::get_position() {
-    return curr_position;
+long Motor::get_position() {
+    return enc.read();
 }
 
 double Motor::get_velocity() {
     return curr_velocity;
+}
+
+void Motor::set_position(double position) {
+  wanted_position = position;
+}
+
+double Motor::get_wanted() {
+  return wanted_velocity;
 }
 
 double *Motor::get_pid_actual() {
@@ -114,10 +133,10 @@ double Motor::get_min() {
 void Motor::set_velocity(double wanted_velocity) {
   this->wanted_velocity = wanted_velocity;
 }
-
-void Motor::set_pid(PID *pid) {
-  this->pid = pid;
-}
+//
+//void Motor::set_pid(PID *pid) {
+//  this->pid = pid;
+//}
 
 void Motor::set_output(double max_output, double min_output) {
   this->max_output = max_output;

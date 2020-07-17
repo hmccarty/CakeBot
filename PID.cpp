@@ -5,27 +5,6 @@ template <typename T> int sgn(T val);
 
 PID::PID(double *actual, double *goal,
          double kp, double ki, double kd,
-         double max_output, double min_output) {
-    this->actual = actual;
-    this->goal = goal;
-    this->output = nullptr;
-
-    this->kp = kp;
-    this->ki = ki;
-    this->kd = kd;
-
-    this->max_output = max_output;
-    this->min_output = min_output;
-
-    prev_error = 0;
-    error_sum = 0;
-
-    prev_time = 0;
-    sample_time = 10;
-}
-
-PID::PID(double *actual, double *goal,
-         double kp, double ki, double kd,
          double max_output, double min_output,
          unsigned long sample_time) {
     this->actual = actual;
@@ -33,43 +12,44 @@ PID::PID(double *actual, double *goal,
     this->output = nullptr;
 
     this->kp = kp;
-    this->ki = ki;
-    this->kd = kd;
+    this->ki = ki * (((double) sample_time) / 1000);
+    this->kd = kd / (((double) sample_time) / 1000);
 
     this->max_output = max_output;
     this->min_output = min_output;
 
     this->sample_time = sample_time;
     
-    prev_error = 0;
-    error_sum = 0;
+    prev_actual = 0;
+    i_sum = 0;
 
     prev_time = 0;
 }
 
 double PID::calculate(unsigned long curr_time) {
-    double error = (*goal) - (*actual);
+    double curr_actual = *actual;
+    double error = (*goal) - curr_actual;
+    Serial.println(error);
 
     double p = kp * error;
-    
-    if ((error == 0) || (sgn(error) != sgn(prev_error))) {
-        error_sum = 0;
-    } else {
-        error_sum += error;
+
+    i_sum += (ki * error);
+    if (i_sum > max_output) {
+      i_sum = max_output;
+    } else if (i_sum < min_output) {
+      i_sum = max_output;
     }
 
-    double i = ki * error_sum;
+    double d = kd * -(curr_actual - prev_actual);
 
-    double d = kd * ((error - prev_error) / (curr_time - prev_time));
-
-    double output = p + i + d;
+    double output = p + i_sum + d;
     if (output > max_output) {
         output = max_output;
     } else if (output < min_output) {
         output = min_output;
     }
 
-    prev_error = error;
+    prev_actual = curr_actual;
     prev_time = curr_time;
 
     return output;
@@ -129,6 +109,12 @@ void PID::set_min(double min_output) {
 }
 
 void PID::set_sample_time(unsigned long sample_time) {
+
+    double ratio = (double) sample_time / (double) this->sample_time;
+
+    ki *= ratio;
+    kd /= ratio;
+    
     this->sample_time = sample_time;
 }
 
