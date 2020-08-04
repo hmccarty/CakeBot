@@ -1,24 +1,28 @@
 #include <Wire.h>
 #include "Motor.h"
 #include "PID_v1.h"
-#include "MPU6050_tockn.h"
+#include "MPU6050.h"
 
 unsigned long sample_time = 100;
-double angle_x = 0;
-double wanted_angle_x = 0;
+
+double angle = 0;
+double wanted_angle = 0;
 double output = 0;
 
 MPU6050 imu(Wire);
 
-Motor leftMotor(9, 10, 7, 8, // Ports
-                125, -125, // Max / Min Output
+Motor leftMotor(9, 10, 7, 8, // Fwd, Rvs, Clk, Dt
+                -125, 125, // Min / Max Output
+                23, 8, 0, // Kp, Ki, Kd
                 sample_time);
 
-Motor rightMotor(5, 6, 2, 3, // Ports
-                125, -125, // Max / Min Output
+Motor rightMotor(6, 5, 2, 3, // Fwd, Rvs, Clk, Dt
+                -125, 125, // Min / Max Output
+                23, 8, 0, // Kp, Ki, Kd
                 sample_time);
 
-PID pid = PID(&angle_x, &output, &wanted_angle_x, 0.26, 0, 0.03, DIRECT);
+PID pid = PID(&angle, &output, &wanted_angle, // Input, Output, Setpoint
+              0.26, 0, 0.03, DIRECT); // Kp, Ki, Kd, POn
 
 void setup() {
   Wire.begin();
@@ -28,7 +32,7 @@ void setup() {
   imu.calcGyroOffsets(true);
 
   pid.SetMode(AUTOMATIC);
-  pid.SetOutputLimits(-2, 2);
+  pid.SetOutputLimits(-2, 2); // Min, Max
 
   leftMotor.setup();
   rightMotor.setup();
@@ -36,12 +40,12 @@ void setup() {
 
 void loop() {
   imu.update();
-  angle_x = imu.getAngleX();
+  angle = imu.getAngleX();
+
   pid.Compute();
-  //Serial.println(angle_x);
-  Serial.println(output);
   leftMotor.set_velocity(output);
-  rightMotor.set_velocity(-output);
+  rightMotor.set_velocity(output);
+
   leftMotor.execute();
   rightMotor.execute();
 }

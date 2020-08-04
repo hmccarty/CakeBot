@@ -12,74 +12,53 @@
 #include "PID_V1.h"
 #include "Encoder.h"
 
-constexpr unsigned N_MOTORS = 1;
 constexpr int MIN_PWM = 10;
 
 class Motor {
     public:
         Motor(byte forward, byte reverse,
               byte clk,  byte dt,
-              double max_output, double min_output,
+              double Kp, double Ki, double Kd,
+              double min_output, double max_output,
               unsigned long sample_time);
 
         void setup();
         void execute();
         
         void reset_encoder();
-        void update_encoder();
-
-        void set_duty_cycle(double dutyCycle);
 
         long get_position();
-        void set_position(double position);
         double get_velocity();
         double get_wanted();
-
-        double *get_pid_actual();
-        double *get_pid_goal();
-
         double get_max();
         double get_min();
 
+        void set_duty_cycle(double dutyCycle);
+        void set_position(double position);
         void set_velocity(double wanted_velocity);
-        //void set_pid(PID *pid);
-        void set_output(double max_output, double min_output);
-
-        template <unsigned MOTOR_IDX> 
-        static void handler();
+        void set_pid(double Kp, double Ki, double Kd);
+        void set_limits(double max_output, double min_output);
 
     private:
         byte forward;
         byte reverse;
     
-        byte clk;
-        byte clk_mask;
-        volatile byte *clk_port;
-
-        byte dt;
-        byte dt_mask;
-        volatile byte *dt_port;
-
-        double output;
+        double pwm_output;
         double max_output;
         double min_output;
 
-        byte prev_enc;
+        double prev_position;
         double curr_position;
         double wanted_position;
-        double prev_position;
 
         double curr_velocity;
         double wanted_velocity;
 
-        PID pid = PID(&curr_velocity, &output, &wanted_velocity, 23, 8, 0, DIRECT);
-        Encoder enc;
+        PID m_pid;
+        Encoder m_enc;
 
         unsigned long prev_time;
         unsigned long sample_time;
-
-        static Motor *self[N_MOTORS];
-        static void (*const HANDLERS[N_MOTORS])();
 };
 
 #endif
