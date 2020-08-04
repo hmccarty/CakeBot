@@ -9,17 +9,11 @@ void (*const Motor::HANDLERS[N_MOTORS])() = {
 
 Motor::Motor(byte forward, byte reverse, byte clk, byte dt,
              double max_output, double min_output,
-             unsigned long sample_time) {
+             unsigned long sample_time) 
+  : enc(clk, dt)
+{
     this->forward = forward;
     this->reverse = reverse;
-   
-    this->clk = clk;
-    clk_mask = digitalPinToBitMask(clk);
-    clk_port = portInputRegister(digitalPinToPort(clk));
-
-    this->dt = dt;
-    dt_mask = digitalPinToBitMask(dt);
-    dt_port = portInputRegister(digitalPinToPort(dt));
 
     output = 0;
     this->max_output = max_output;
@@ -48,15 +42,12 @@ void Motor::setup() {
     pinMode(reverse, OUTPUT);
 
     pid.SetMode(AUTOMATIC);
-    pid.SetOutputLimits(max_output, min_output);
-
-    //attachInterrupt(digitalPinToInterrupt(clk), HANDLERS[0], CHANGE);
-    //attachInterrupt(digitalPinToInterrupt(dt), HANDLERS[0], CHANGE);
+    pid.SetOutputLimits(min_output, max_output);
 }
 
 void Motor::update_encoder() {
     byte enc = ((*clk_port & clk_mask) << 1) | ((*dt_port & dt_mask) >> 5);
-    curr_position += qem[(prev_enc << 2) | enc];
+    curr_position -= qem[(prev_enc << 2) | enc];
     prev_enc = enc;
 }
 
@@ -71,24 +62,24 @@ void Motor::execute() {
   unsigned long time_change = (curr_time - prev_time);
   curr_position = (double) enc.read();
 
-  if (time_change >= 100) {
+  if (time_change >= 50) {
     curr_velocity = ((curr_position - prev_position) / (double) time_change);
-
-    //double output = (*pid).calculate(curr_time)
 
     prev_position = curr_position;
     prev_time = curr_time;
   }
 
-  //pid.Compute();
-//  Serial.print("Output: ");
-//  Serial.print(output);
-//  Serial.println();
-  //set_duty_cycle(255);
-  set_duty_cycle(120);
+  pid.Compute();
+  //Serial.println(output);
+  set_duty_cycle(output);
 }
 
 void Motor::set_duty_cycle(double dutyCycle) {
+  if (abs(dutyCycle) < MIN_PWM) {
+    dutyCycle = 0;
+  }
+
+  //Serial.println(dutyCycle);
   if (dutyCycle > 0) {
     analogWrite(forward, dutyCycle);
     analogWrite(reverse, 0);

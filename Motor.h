@@ -13,6 +13,7 @@
 #include "Encoder.h"
 
 constexpr unsigned N_MOTORS = 1;
+constexpr int MIN_PWM = 10;
 
 class Motor {
     public:
@@ -71,8 +72,8 @@ class Motor {
         double curr_velocity;
         double wanted_velocity;
 
-        PID pid = PID(&curr_position, &output, &wanted_position, 0.1, 0.0001, 0, P_ON_E, DIRECT);
-        Encoder enc = Encoder(2,3);
+        PID pid = PID(&curr_velocity, &output, &wanted_velocity, 23, 8, 0, DIRECT);
+        Encoder enc;
 
         unsigned long prev_time;
         unsigned long sample_time;
